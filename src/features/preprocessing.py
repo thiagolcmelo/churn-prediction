@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
 from sklearn.model_selection import train_test_split
 from src.utils import get_logger, set_seeds
 
@@ -46,15 +46,20 @@ class TotalChargesFixer(BaseEstimator, TransformerMixin):
         return X
 
 
-def build_preprocessor() -> Pipeline:
+def build_preprocessor(polynomial: bool = False) -> Pipeline:
     """Build the full preprocessing pipeline: imputation + scaling + encoding.
 
     The Pipeline ensures TotalCharges imputation uses only training-set
     statistics, preventing the data leakage bug described in Section 1.5.
     """
+    num_pipeline = Pipeline([
+        ("scaler", StandardScaler()),
+        *([("poly", PolynomialFeatures(degree=2, interaction_only=True,
+                                       include_bias=False))] if polynomial else []),
+    ])
     column_transformer = ColumnTransformer(
         transformers=[
-            ("num", StandardScaler(), NUM_COLS),
+            ("num", num_pipeline, NUM_COLS),
             ("cat", OneHotEncoder(drop="if_binary", handle_unknown="ignore",
                                   sparse_output=False), CAT_COLS),
         ]
