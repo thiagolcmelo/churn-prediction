@@ -6,6 +6,7 @@ import random
 
 import numpy as np
 import pandas as pd
+import torch
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -59,3 +60,9 @@ def set_seeds(seed: int = 42) -> None:
     """
     random.seed(seed)           # Python stdlib random
     np.random.seed(seed)        # NumPy random generator
+    torch.manual_seed(seed)     # PyTorch CPU random
+    torch.cuda.manual_seed_all(seed)  # PyTorch GPU random (all GPUs)
+
+    # Force deterministic algorithms in PyTorch
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
