@@ -78,6 +78,7 @@ def log_auc_curve(
     axes[1].plot([0, 1], [0, 1], "k--", label="Random (AUC=0.5)")
     axes[1].legend()
     plt.tight_layout()
+    plt.savefig(f"docs/figures/auc_{name}.png", dpi=150)
     mlflow.log_artifact(f"docs/figures/auc_{name}.png")
     plt.close()
 
