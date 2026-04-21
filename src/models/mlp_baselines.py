@@ -101,7 +101,7 @@ def main():
 
     results = {}
 
-    with mlflow.start_run(run_name="comparison") as parent_run:
+    with mlflow.start_run(run_name="comparison"):
         mlflow.log_params(data_fp)
 
         # --- 1. Logistic Regression ---
@@ -115,7 +115,9 @@ def main():
                     "random_state": 42,
                 }
             )
-            lr = LogisticRegression(class_weight="balanced", max_iter=1000, random_state=42)
+            lr = LogisticRegression(
+                class_weight="balanced", max_iter=1000, random_state=42
+            )
             lr.fit(X_train_processed, y_train)
             y_pred_lr = lr.predict(X_test_processed)
             y_proba_lr = lr.predict_proba(X_test_processed)[:, 1]
@@ -230,9 +232,7 @@ def main():
             log_auc_curve(y_test, y_proba_mlp, "mlp")
 
             torch.save(mlp.state_dict(), "models/mlp_churn.pt")
-            mlflow.pytorch.log_model(
-                mlp, "model", registered_model_name="churn-mlp"
-            )
+            mlflow.pytorch.log_model(mlp, "model", registered_model_name="churn-mlp")
 
         # --- Comparison table ---
         comparison_df = pd.DataFrame(results).T
