@@ -1,26 +1,27 @@
 """Baseline models: DummyClassifier and Logistic Regression with MLflow tracking."""
 
+import matplotlib.pyplot as plt
 import mlflow
-import numpy as np
+from numpy.typing import ArrayLike
+from sklearn.base import BaseEstimator
 from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import StratifiedKFold, cross_validate
-from sklearn.pipeline import Pipeline
 from sklearn.metrics import (
+    ConfusionMatrixDisplay,
+    PrecisionRecallDisplay,
+    RocCurveDisplay,
     accuracy_score,
     average_precision_score,
-    ConfusionMatrixDisplay,
     f1_score,
     precision_score,
-    PrecisionRecallDisplay,
     recall_score,
     roc_auc_score,
-    RocCurveDisplay,
 )
-import matplotlib.pyplot as plt
+from sklearn.model_selection import StratifiedKFold, cross_validate
+from sklearn.pipeline import Pipeline
 
-from src.features.preprocessing import load_and_split, build_preprocessor
-from src.utils import get_logger, set_seeds, get_data_fingerprint
+from src.features.preprocessing import build_preprocessor, load_and_split
+from src.utils import get_data_fingerprint, get_logger, set_seeds
 
 logger = get_logger(__name__)
 set_seeds(42)
@@ -28,11 +29,14 @@ set_seeds(42)
 EXPERIMENT_NAME = "churn-baselines"
 
 
-def evaluate_model(model, X_test, y_test) -> dict:
+def evaluate_model(
+    model: BaseEstimator, X_test: ArrayLike, y_test: ArrayLike
+) -> dict[str, float]:
     """Compute all metrics for a fitted model."""
     y_pred = model.predict(X_test)
-    y_prob = (model.predict_proba(X_test)[:, 1]
-              if hasattr(model, "predict_proba") else None)
+    y_prob = (
+        model.predict_proba(X_test)[:, 1] if hasattr(model, "predict_proba") else None
+    )
 
     metrics = {
         "accuracy": accuracy_score(y_test, y_pred),
@@ -47,11 +51,12 @@ def evaluate_model(model, X_test, y_test) -> dict:
     return metrics
 
 
-def log_confusion_matrix(model, X_test, y_test, name: str):
+def log_confusion_matrix(
+    model: BaseEstimator, X_test: ArrayLike, y_test: ArrayLike, name: str
+) -> None:
     """Save confusion matrix plot as MLflow artifact."""
     fig, ax = plt.subplots(figsize=(6, 5))
-    ConfusionMatrixDisplay.from_estimator(model, X_test, y_test,
-                                          ax=ax, cmap="Blues")
+    ConfusionMatrixDisplay.from_estimator(model, X_test, y_test, ax=ax, cmap="Blues")
     ax.set_title(f"Confusion Matrix — {name}")
     plt.tight_layout()
     plt.savefig(f"docs/figures/cm_{name}.png", dpi=150)
@@ -59,15 +64,17 @@ def log_confusion_matrix(model, X_test, y_test, name: str):
     plt.close()
 
 
-def log_auc_curve(model, X_test, y_test, name: str):
+def log_auc_curve(
+    model: BaseEstimator, X_test: ArrayLike, y_test: ArrayLike, name: str
+) -> None:
     """Save PR-ROC and ROC-AUC curves plot as MLflow artifact."""
     _, axes = plt.subplots(1, 2, figsize=(10, 5))
     PrecisionRecallDisplay.from_estimator(model, X_test, y_test, ax=axes[0])
-    axes[0].set_title(f"PR Curve — logistic_regression")
+    axes[0].set_title("PR Curve — logistic_regression")
     axes[0].plot([0, 1], [1, 0], "k--", label="Random (AUC=0.5)")
     axes[0].legend()
     RocCurveDisplay.from_estimator(model, X_test, y_test, ax=axes[1])
-    axes[1].set_title(f"ROC Curve — logistic_regression")
+    axes[1].set_title("ROC Curve — logistic_regression")
     axes[1].plot([0, 1], [0, 1], "k--", label="Random (AUC=0.5)")
     axes[1].legend()
     plt.tight_layout()
@@ -75,7 +82,7 @@ def log_auc_curve(model, X_test, y_test, name: str):
     plt.close()
 
 
-def main():
+def main() -> None:
     X_train, X_test, y_train, y_test = load_and_split()
     preprocessor = build_preprocessor()
 
@@ -87,10 +94,12 @@ def main():
     # -- Baseline 1: DummyClassifier ------------------------------------
     with mlflow.start_run(run_name="dummy-most-frequent"):
         mlflow.log_params(data_fp)  # dataset version tracking
-        dummy_pipe = Pipeline([
-            ("preprocessor", preprocessor),
-            ("classifier", DummyClassifier(strategy="most_frequent")),
-        ])
+        dummy_pipe = Pipeline(
+            [
+                ("preprocessor", preprocessor),
+                ("classifier", DummyClassifier(strategy="most_frequent")),
+            ]
+        )
         dummy_pipe.fit(X_train, y_train)
         metrics = evaluate_model(dummy_pipe, X_test, y_test)
 
@@ -98,34 +107,43 @@ def main():
         mlflow.log_param("strategy", "most_frequent")
         mlflow.log_metrics(metrics)
 
-        logger.info(f"Dummy — Accuracy: {metrics['accuracy']:.3f}, "
-                     f"F1: {metrics['f1']:.3f}")
+        logger.info(
+            f"Dummy — Accuracy: {metrics['accuracy']:.3f}, F1: {metrics['f1']:.3f}"
+        )
         log_confusion_matrix(dummy_pipe, X_test, y_test, "dummy")
 
     # -- Baseline 2: Logistic Regression --------------------------------
     with mlflow.start_run(run_name="logistic-regression"):
         mlflow.log_params(data_fp)  # dataset version tracking
-        lr_pipe = Pipeline([
-            ("preprocessor", preprocessor),
-            ("classifier", LogisticRegression(
-                class_weight="balanced",
-                max_iter=1000,
-                random_state=42,
-            )),
-        ])
+        lr_pipe = Pipeline(
+            [
+                ("preprocessor", preprocessor),
+                (
+                    "classifier",
+                    LogisticRegression(
+                        class_weight="balanced",
+                        max_iter=1000,
+                        random_state=42,
+                    ),
+                ),
+            ]
+        )
 
         # Scoring metrics
         scoring_metrics = [
             "accuracy",
             "average_precision",  # pr_auc
             "f1",
-            "roc_auc"                
+            "roc_auc",
         ]
 
         # Cross-validation for reliable estimate
         cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
         cv_results = cross_validate(
-            lr_pipe, X_train, y_train, cv=cv,
+            lr_pipe,
+            X_train,
+            y_train,
+            cv=cv,
             scoring=scoring_metrics,
             return_train_score=False,
         )
@@ -138,17 +156,20 @@ def main():
             scores = cv_results[f"test_{metric_name}"]
             mlflow.log_metric(f"cv_{metric_name}_mean", scores.mean())
             mlflow.log_metric(f"cv_{metric_name}_std", scores.std())
-            logger.info(f"LR CV {metric_name}: "
-                         f"{scores.mean():.3f} +/- {scores.std():.3f}")
+            logger.info(
+                f"LR CV {metric_name}: {scores.mean():.3f} +/- {scores.std():.3f}"
+            )
 
         # Fit on full training set for test evaluation
         lr_pipe.fit(X_train, y_train)
         test_metrics = evaluate_model(lr_pipe, X_test, y_test)
         mlflow.log_metrics({f"test_{k}": v for k, v in test_metrics.items()})
 
-        logger.info(f"LR Test — PR-AUC: {test_metrics.get('pr_auc', 'N/A'):.3f}, "
-                    f"ROC-AUC: {test_metrics.get('roc_auc', 'N/A'):.3f}, "
-                    f"F1: {test_metrics['f1']:.3f}")
+        logger.info(
+            f"LR Test — PR-AUC: {test_metrics.get('pr_auc', 'N/A'):.3f}, "
+            f"ROC-AUC: {test_metrics.get('roc_auc', 'N/A'):.3f}, "
+            f"F1: {test_metrics['f1']:.3f}"
+        )
 
         log_confusion_matrix(lr_pipe, X_test, y_test, "logistic_regression")
         log_auc_curve(lr_pipe, X_test, y_test, "logistic_regression")

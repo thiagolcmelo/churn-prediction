@@ -3,6 +3,7 @@
 import hashlib
 import logging
 import random
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -31,7 +32,7 @@ def get_logger(name: str) -> logging.Logger:
     return logger
 
 
-def get_data_fingerprint(df: pd.DataFrame) -> dict:
+def get_data_fingerprint(df: pd.DataFrame) -> dict[str, Any]:
     """Compute a reproducible fingerprint of the dataset for MLflow tracking.
 
     The challenge requires logging 'dataset version' alongside parameters and metrics.
@@ -58,9 +59,9 @@ def set_seeds(seed: int = 42) -> None:
     Args:
         seed: Integer seed value. Default 42 (convention).
     """
-    random.seed(seed)           # Python stdlib random
-    np.random.seed(seed)        # NumPy random generator
-    torch.manual_seed(seed)     # PyTorch CPU random
+    random.seed(seed)  # Python stdlib random
+    np.random.seed(seed)  # NumPy random generator
+    torch.manual_seed(seed)  # PyTorch CPU random
     torch.cuda.manual_seed_all(seed)  # PyTorch GPU random (all GPUs)
 
     # Force deterministic algorithms in PyTorch
