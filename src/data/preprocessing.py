@@ -103,6 +103,34 @@ def build_preprocessor(polynomial: bool = False) -> Pipeline:
     )
 
 
+def prepare_dataset(
+    df: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.Series, list[str], list[str]]:
+    """Clean raw dataframe and return X, y, feature lists.
+
+    NOTE: TotalCharges NaN imputation is NOT done here — it happens
+    inside the pipeline (TotalChargesFixer) to prevent data leakage.
+
+    Returns:
+        (X, y, num_features, cat_features) tuple
+    """
+    df = df.copy()
+
+    # Convert TotalCharges blanks to NaN (but do NOT impute yet — that
+    # happens in the pipeline to avoid leaking test-set statistics)
+    df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
+
+    # Encode target
+    df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0})
+
+    # Drop ID column
+    df.drop(columns=["customerID"], inplace=True)
+
+    X = df[NUM_COLS + CAT_COLS]
+    y = df[TARGET]
+    return X, y, NUM_COLS, CAT_COLS
+
+
 def load_and_split(
     path: str = "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv",
     test_size: float = 0.2,
@@ -122,18 +150,7 @@ def load_and_split(
     df = pd.read_csv(path)
     RAW_SCHEMA.validate(df)
 
-    # Convert TotalCharges blanks to NaN (but do NOT impute yet — that
-    # happens in the pipeline to avoid leaking test-set statistics)
-    df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
-
-    # Encode target
-    df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0})
-
-    # Drop ID column
-    df.drop(columns=["customerID"], inplace=True)
-
-    X = df[NUM_COLS + CAT_COLS]
-    y = df[TARGET]
+    X, y, _, _ = prepare_dataset(df)
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=test_size, random_state=seed, stratify=y

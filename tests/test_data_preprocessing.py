@@ -1,10 +1,11 @@
 """Data validation tests using pandera."""
 
+import numpy as np
 import pandas as pd
 import pandera.pandas as pa
 import pytest
 
-from src.data.preprocessing import RAW_SCHEMA
+from src.data.preprocessing import CAT_COLS, NUM_COLS, RAW_SCHEMA, prepare_dataset
 
 
 def test_valid_data_passes_schema():
@@ -64,3 +65,14 @@ def test_invalid_contract_fails():
     )
     with pytest.raises(pa.errors.SchemaError):
         RAW_SCHEMA.validate(df)
+
+
+def test_prepare_dataset(sample_data):
+    """Verify prepare_dataset returns correct shapes and types."""
+    X, y, num_feats, cat_feats = prepare_dataset(sample_data)
+    assert X.shape[0] == 5, "Should have 5 rows"
+    assert "customerID" not in X.columns, "customerID should be dropped"
+    assert set(num_feats) == set(NUM_COLS)
+    assert set(cat_feats) == set(CAT_COLS)
+    assert y.dtype in [np.int64, np.int32, int], "Target should be integer"
+    assert set(y.unique()).issubset({0, 1}), "Target should be 0 or 1"
