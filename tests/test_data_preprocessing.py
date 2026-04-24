@@ -1,6 +1,6 @@
 """Data validation tests using pandera."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
@@ -17,7 +17,7 @@ from src.data.preprocessing import (
 )
 
 
-def test_valid_data_passes_schema():
+def test_valid_data_passes_schema() -> None:
     """Known-good data should pass validation."""
     df = pd.DataFrame(
         {
@@ -36,7 +36,7 @@ def test_valid_data_passes_schema():
     PREPARED_SCHEMA.validate(df)  # Should not raise
 
 
-def test_negative_tenure_fails():
+def test_negative_tenure_fails() -> None:
     """Negative tenure should fail validation."""
     df = pd.DataFrame(
         {
@@ -56,7 +56,7 @@ def test_negative_tenure_fails():
         PREPARED_SCHEMA.validate(df)
 
 
-def test_invalid_contract_fails():
+def test_invalid_contract_fails() -> None:
     """Unknown contract type should fail validation."""
     df = pd.DataFrame(
         {
@@ -76,7 +76,7 @@ def test_invalid_contract_fails():
         PREPARED_SCHEMA.validate(df)
 
 
-def test_prepare_dataset(sample_data):
+def test_prepare_dataset(sample_data: pd.DataFrame) -> None:
     """Verify prepare_dataset returns correct shapes and types."""
     X, y, num_feats, cat_feats = prepare_dataset(sample_data)
     assert X.shape[0] == 5, "Should have 5 rows"
@@ -87,26 +87,28 @@ def test_prepare_dataset(sample_data):
     assert set(y.unique()).issubset({0, 1}), "Target should be 0 or 1"
 
 
-def test_prepare_dataset_encodes_churn(sample_data):
+def test_prepare_dataset_encodes_churn(sample_data: pd.DataFrame) -> None:
     """Prepare should conver "Yes" to 1 and "No" to 0."""
     _, y, _, _ = prepare_dataset(sample_data)
     assert sorted(set(y)) == [0, 1], "Churn should be encoded as 0/1"
 
 
-def test_prepare_dataset_drops_customer_id(sample_data):
+def test_prepare_dataset_drops_customer_id(sample_data: pd.DataFrame) -> None:
     """Column customerID was deemed not useful and must be dropped."""
     X, _, _, _ = prepare_dataset(sample_data)
     assert "customerID" not in X.columns
 
 
-def test_prepare_dataset_coerces_total_charges_blanks(sample_data):
+def test_prepare_dataset_coerces_total_charges_blanks(
+    sample_data: pd.DataFrame,
+) -> None:
     """TotalCharges should become NaN for imputation later."""
     sample_data.loc[0, "TotalCharges"] = " "
     X, _, _, _ = prepare_dataset(sample_data)
     assert pd.isna(X["TotalCharges"].iloc[0]), "Blank TotalCharges should become NaN"
 
 
-def test_preprocessor_output_shape(sample_data):
+def test_preprocessor_output_shape(sample_data: pd.DataFrame) -> None:
     """Verify preprocessor produces the right number of columns."""
     X, _, _, _ = prepare_dataset(sample_data)
     preprocessor = build_preprocessor()
@@ -115,7 +117,7 @@ def test_preprocessor_output_shape(sample_data):
     assert X_processed.shape[1] > len(NUM_COLS), "One-hot encoding should add columns"
 
 
-def test_build_preprocessor_produces_numeric_output(sample_data):
+def test_build_preprocessor_produces_numeric_output(sample_data: pd.DataFrame) -> None:
     """Preprocessor output must be completely numeric."""
     preprocessor = build_preprocessor()
     X, _, _, _ = prepare_dataset(sample_data)
@@ -125,7 +127,9 @@ def test_build_preprocessor_produces_numeric_output(sample_data):
 
 
 @patch("src.data.preprocessing.pd.read_csv")
-def test_load_and_split_stratification(mock_read_csv, sample_data_n):
+def test_load_and_split_stratification(
+    mock_read_csv: MagicMock, sample_data_n: pd.DataFrame
+) -> None:
     """Churn rate should be similar in train and test."""
     mock_read_csv.return_value = sample_data_n
     _, _, y_train, y_test = load_and_split()

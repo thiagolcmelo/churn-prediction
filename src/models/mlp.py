@@ -1,5 +1,7 @@
 """MLP model definition for churn prediction."""
 
+from typing import cast
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -20,7 +22,7 @@ class ChurnMLP(nn.Module):
     def __init__(
         self,
         input_dim: int,
-        hidden_dims: list[int] = None,
+        hidden_dims: list[int] | None = None,
         dropout: float = 0.2,
     ):
         super().__init__()
@@ -52,7 +54,7 @@ class ChurnMLP(nn.Module):
         During training: pass logits directly to BCEWithLogitsLoss.
         During inference: apply torch.sigmoid() to get probabilities.
         """
-        return self.network(x).squeeze(-1)
+        return cast(torch.Tensor, self.network(x).squeeze(-1))
 
     def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
         """Inference helper: returns calibrated probabilities in [0, 1]."""
@@ -61,7 +63,7 @@ class ChurnMLP(nn.Module):
             return torch.sigmoid(self.forward(x))
 
 
-class SklearnChurnMLP(BaseEstimator, ClassifierMixin):
+class SklearnChurnMLP(BaseEstimator, ClassifierMixin):  # type: ignore[misc]
     """Sklearn-compatible wrapper around ChurnMLP for use with sklearn utilities
     (ConfusionMatrixDisplay, classification_report, cross_val_score, etc.).
 

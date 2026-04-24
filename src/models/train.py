@@ -1,5 +1,7 @@
 """Training loop with early stopping for the churn MLP."""
 
+from typing import TypeVar
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -8,11 +10,13 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from src.utils import get_logger
 
+_ModelT = TypeVar("_ModelT", bound=nn.Module)
+
 logger = get_logger(__name__)
 
 
 def train_mlp(
-    model: nn.Module,
+    model: _ModelT,
     X_train: np.ndarray,
     y_train: np.ndarray,
     X_val: np.ndarray,
@@ -21,7 +25,7 @@ def train_mlp(
     batch_size: int = 64,
     lr: float = 1e-3,
     patience: int = 50,
-) -> nn.Module:
+) -> _ModelT:
     """Train the MLP with early stopping on validation loss.
 
     Args:

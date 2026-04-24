@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, PolynomialFeatures, StandardScaler
 
-from features.preprocessing import TotalChargesFixer
+from src.features.preprocessing import TotalChargesFixer
 from src.utils import get_logger, set_seeds
 
 logger = get_logger(__name__)
@@ -40,7 +40,7 @@ TARGET = "Churn"
 
 
 # Define expected schema for raw input data
-RAW_SCHEMA = DataFrameSchema(
+RAW_SCHEMA = DataFrameSchema(  # type: ignore[no-untyped-call]
     {
         "customerID": Column(str),
         "tenure": Column(int, Check.ge(0), nullable=False),
@@ -63,7 +63,7 @@ RAW_SCHEMA = DataFrameSchema(
 
 
 # Useful for catching inconsistencies in data preparation
-PREPARED_SCHEMA = DataFrameSchema(
+PREPARED_SCHEMA = DataFrameSchema(  # type: ignore[no-untyped-call]
     {
         "tenure": Column(int, Check.ge(0), nullable=False),
         "MonthlyCharges": Column(float, Check.ge(0), nullable=False),

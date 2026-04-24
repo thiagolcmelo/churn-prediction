@@ -20,7 +20,7 @@ from sklearn.metrics import (
 from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.pipeline import Pipeline
 
-from src.features.preprocessing import build_preprocessor, load_and_split
+from src.data.preprocessing import build_preprocessor, load_and_split
 from src.utils import get_data_fingerprint, get_logger, set_seeds
 
 logger = get_logger(__name__)

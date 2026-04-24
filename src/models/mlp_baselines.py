@@ -1,9 +1,11 @@
 import pickle
 import tempfile
+from typing import Any
 
 import mlflow
 import mlflow.pytorch
 import mlflow.sklearn
+import numpy as np
 import pandas as pd
 import torch
 from matplotlib import pyplot as plt
@@ -34,7 +36,12 @@ set_seeds(42)
 EXPERIMENT_NAME = "mlp-vs-baselines"
 
 
-def evaluate_and_log(model_name, y_true, y_pred, y_proba):
+def evaluate_and_log(
+    model_name: str,
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    y_proba: np.ndarray,
+) -> dict[str, float]:
     """Compute metrics, print report, and log to the active MLflow run."""
     metrics = {
         "accuracy": accuracy_score(y_true, y_pred),
@@ -54,7 +61,9 @@ def evaluate_and_log(model_name, y_true, y_pred, y_proba):
     return metrics
 
 
-def log_confusion_matrix(model, X_test, y_test, name: str):
+def log_confusion_matrix(
+    model: Any, X_test: np.ndarray, y_test: np.ndarray, name: str
+) -> None:
     """Save confusion matrix plot as MLflow artifact."""
     fig, ax = plt.subplots(figsize=(6, 5))
     y_pred = model.predict(X_test)
@@ -66,7 +75,7 @@ def log_confusion_matrix(model, X_test, y_test, name: str):
     plt.close()
 
 
-def log_auc_curve(y_test, y_proba, name: str):
+def log_auc_curve(y_test: np.ndarray, y_proba: np.ndarray, name: str) -> None:
     """Save PR and ROC curves as MLflow artifact."""
     _, axes = plt.subplots(1, 2, figsize=(10, 5))
 
@@ -86,7 +95,7 @@ def log_auc_curve(y_test, y_proba, name: str):
     plt.close()
 
 
-def main():
+def main() -> None:
     X_train, X_test, y_train, y_test = load_and_split()
     preprocessor = build_preprocessor()
 
