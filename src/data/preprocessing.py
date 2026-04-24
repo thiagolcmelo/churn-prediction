@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from features.preprocessing import TotalChargesFixer
 import pandas as pd
+from pandera import Check, Column, DataFrameSchema
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, PolynomialFeatures, StandardScaler
 
+from features.preprocessing import TotalChargesFixer
 from src.utils import get_logger, set_seeds
 
 logger = get_logger(__name__)
@@ -36,6 +37,27 @@ CAT_COLS = [
     "PaymentMethod",
 ]
 TARGET = "Churn"
+
+
+# Define expected schema for raw input data
+RAW_SCHEMA = DataFrameSchema(
+    {
+        "tenure": Column(int, Check.ge(0), nullable=False),
+        "MonthlyCharges": Column(float, Check.ge(0), nullable=False),
+        "TotalCharges": Column(float, Check.ge(0), nullable=False),
+        "gender": Column(str, Check.isin(["Male", "Female"]), nullable=False),
+        "SeniorCitizen": Column(int, Check.isin([0, 1]), nullable=False),
+        "Partner": Column(str, Check.isin(["Yes", "No"]), nullable=False),
+        "Dependents": Column(str, Check.isin(["Yes", "No"]), nullable=False),
+        "PhoneService": Column(str, Check.isin(["Yes", "No"]), nullable=False),
+        "InternetService": Column(
+            str, Check.isin(["DSL", "Fiber optic", "No"]), nullable=False
+        ),
+        "Contract": Column(
+            str, Check.isin(["Month-to-month", "One year", "Two year"]), nullable=False
+        ),
+    }
+)
 
 
 def build_preprocessor(polynomial: bool = False) -> Pipeline:
@@ -98,6 +120,7 @@ def load_and_split(
     set_seeds(seed)
 
     df = pd.read_csv(path)
+    RAW_SCHEMA.validate(df)
 
     # Convert TotalCharges blanks to NaN (but do NOT impute yet — that
     # happens in the pipeline to avoid leaking test-set statistics)
