@@ -32,6 +32,7 @@ def X_array() -> np.ndarray:
 
 # --- ChurnMLP ---
 
+
 def test_mlp_forward_pass() -> None:
     """Verify MLP produces output with correct shape for any input dimension.
 
@@ -77,8 +78,9 @@ def test_mlp_output_changes_after_train_step() -> None:
     with torch.no_grad():
         after = model(x)
 
-    assert not torch.allclose(before, after), \
+    assert not torch.allclose(before, after), (
         "Model output should change after a training step"
+    )
 
 
 def test_mlp_end_to_end_with_preprocessor() -> None:
@@ -87,21 +89,39 @@ def test_mlp_end_to_end_with_preprocessor() -> None:
     This is the ROBUST test — it uses the actual preprocessor to determine
     input_dim dynamically, so it never breaks if the dataset changes.
     """
-    import pickle, os
+    import os
+    import pickle
+
     preprocessor_path = "models/preprocessor.pkl"
     if not os.path.exists(preprocessor_path):
         pytest.skip("Preprocessor not fitted yet — run training first")
 
     preprocessor = pickle.load(open(preprocessor_path, "rb"))
-    sample = pd.DataFrame([{
-        "tenure": 12, "MonthlyCharges": 70.0, "TotalCharges": 840.0,
-        "Contract": "Month-to-month", "InternetService": "Fiber optic",
-        "TechSupport": "No", "OnlineSecurity": "No", "gender": "Male",
-        "SeniorCitizen": 0, "Partner": "No", "Dependents": "No",
-        "PhoneService": "Yes", "MultipleLines": "No", "OnlineBackup": "No",
-        "DeviceProtection": "No", "StreamingTV": "No", "StreamingMovies": "No",
-        "PaperlessBilling": "Yes", "PaymentMethod": "Electronic check",
-    }])
+    sample = pd.DataFrame(
+        [
+            {
+                "tenure": 12,
+                "MonthlyCharges": 70.0,
+                "TotalCharges": 840.0,
+                "Contract": "Month-to-month",
+                "InternetService": "Fiber optic",
+                "TechSupport": "No",
+                "OnlineSecurity": "No",
+                "gender": "Male",
+                "SeniorCitizen": 0,
+                "Partner": "No",
+                "Dependents": "No",
+                "PhoneService": "Yes",
+                "MultipleLines": "No",
+                "OnlineBackup": "No",
+                "DeviceProtection": "No",
+                "StreamingTV": "No",
+                "StreamingMovies": "No",
+                "PaperlessBilling": "Yes",
+                "PaymentMethod": "Electronic check",
+            }
+        ]
+    )
     X_processed = preprocessor.transform(sample)
     input_dim = X_processed.shape[1]
 
