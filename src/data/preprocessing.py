@@ -42,6 +42,29 @@ TARGET = "Churn"
 # Define expected schema for raw input data
 RAW_SCHEMA = DataFrameSchema(
     {
+        "customerID": Column(str),
+        "tenure": Column(int, Check.ge(0), nullable=False),
+        "MonthlyCharges": Column(float, Check.ge(0), nullable=False),
+        "TotalCharges": Column(object),
+        "gender": Column(str, Check.isin(["Male", "Female"]), nullable=False),
+        "SeniorCitizen": Column(int, Check.isin([0, 1]), nullable=False),
+        "Partner": Column(str, Check.isin(["Yes", "No"]), nullable=False),
+        "Dependents": Column(str, Check.isin(["Yes", "No"]), nullable=False),
+        "PhoneService": Column(str, Check.isin(["Yes", "No"]), nullable=False),
+        "InternetService": Column(
+            str, Check.isin(["DSL", "Fiber optic", "No"]), nullable=False
+        ),
+        "Contract": Column(
+            str, Check.isin(["Month-to-month", "One year", "Two year"]), nullable=False
+        ),
+        "Churn": Column(str, Check.isin(["Yes", "No"])),
+    }
+)
+
+
+# Useful for catching inconsistencies in data preparation
+PREPARED_SCHEMA = DataFrameSchema(
+    {
         "tenure": Column(int, Check.ge(0), nullable=False),
         "MonthlyCharges": Column(float, Check.ge(0), nullable=False),
         "TotalCharges": Column(float, Check.ge(0), nullable=False),
@@ -151,6 +174,7 @@ def load_and_split(
     RAW_SCHEMA.validate(df)
 
     X, y, _, _ = prepare_dataset(df)
+    PREPARED_SCHEMA.validate(X)
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=test_size, random_state=seed, stratify=y

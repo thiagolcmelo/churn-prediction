@@ -1,17 +1,17 @@
 import pandas as pd
 import pytest
 
-from utils import set_seeds
+from src.utils import set_seeds
 
 
 @pytest.fixture(autouse=True)
-def seed_everything():
+def seed_everything() -> None:
     """Fix random seeds for reproducible tests."""
     set_seeds(42)
 
 
 @pytest.fixture
-def sample_data():
+def sample_data() -> pd.DataFrame:
     """Create a small sample dataset for testing."""
     return pd.DataFrame(
         {
@@ -48,5 +48,37 @@ def sample_data():
                 "Electronic check",
             ],
             "Churn": ["No", "No", "Yes", "No", "Yes"],
+        }
+    )
+
+
+@pytest.fixture
+def sample_data_n(n: int = 20) -> pd.DataFrame:
+    """Create a sample dataset as big as needed for testing."""
+    return pd.DataFrame(
+        {
+            "customerID": [str(i) for i in range(n)],
+            "tenure": [i % 72 for i in range(n)],
+            "MonthlyCharges": [50.0 + i for i in range(n)],
+            "TotalCharges": [f"{50.0 * (i % 72 + 1)}" for i in range(n)],
+            "gender": ["Male" if i % 2 == 0 else "Female" for i in range(n)],
+            "SeniorCitizen": [i % 2 for i in range(n)],
+            "Partner": ["Yes" if i % 2 == 0 else "No" for i in range(n)],
+            "Dependents": ["No"] * n,
+            "PhoneService": ["Yes"] * n,
+            "MultipleLines": ["No"] * n,
+            "InternetService": [
+                "DSL" if i % 2 == 0 else "Fiber optic" for i in range(n)
+            ],
+            "OnlineSecurity": ["No"] * n,
+            "OnlineBackup": ["No"] * n,
+            "DeviceProtection": ["No"] * n,
+            "TechSupport": ["No"] * n,
+            "StreamingTV": ["No"] * n,
+            "StreamingMovies": ["No"] * n,
+            "Contract": ["Month-to-month"] * n,
+            "PaperlessBilling": ["Yes"] * n,
+            "PaymentMethod": ["Electronic check"] * n,
+            "Churn": ["Yes" if i % 5 == 0 else "No" for i in range(n)],
         }
     )
