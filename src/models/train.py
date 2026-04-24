@@ -106,7 +106,7 @@ def train_mlp(
         if (val_pr_auc > best_val_pr_auc) and (val_loss < best_val_loss):
             best_val_pr_auc = val_pr_auc
             best_val_loss = val_loss
-            best_state = model.state_dict().copy()
+            best_state = {k: v.clone() for k, v in model.state_dict().items()}
             wait = 0
         else:
             wait += 1
