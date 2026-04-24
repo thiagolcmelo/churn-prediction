@@ -23,7 +23,7 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import train_test_split
 
-from src.features.preprocessing import build_preprocessor, load_and_split
+from src.data.preprocessing import build_preprocessor, load_and_split
 from src.models.mlp import ChurnMLP, SklearnChurnMLP
 from src.models.train import train_mlp
 from src.utils import get_data_fingerprint, get_logger, set_seeds
