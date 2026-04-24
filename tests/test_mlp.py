@@ -1,6 +1,7 @@
 """Tests for ChurnMLP and SklearnChurnMLP."""
 
 import numpy as np
+import pandas as pd
 import pytest
 import torch
 
@@ -30,6 +31,88 @@ def X_array() -> np.ndarray:
 
 
 # --- ChurnMLP ---
+
+def test_mlp_forward_pass() -> None:
+    """Verify MLP produces output with correct shape for any input dimension.
+
+    NOTE: We don't hardcode 46 (the OneHotEncoder output size) because that
+    number depends on the dataset's unique categories and could change.
+    Instead, we test with an arbitrary dimension to verify the architecture works.
+    """
+    input_dim = 20  # arbitrary — tests architecture, not data shape
+    model = ChurnMLP(input_dim=input_dim)
+    model.eval()
+    x = torch.randn(8, input_dim)  # batch of 8 samples
+
+    with torch.no_grad():
+        logits = model(x)
+
+    assert logits.shape == (8,), f"Expected shape (8,), got {logits.shape}"
+    # Model outputs raw logits now (not probabilities), so no [0,1] check here
+
+
+def test_mlp_output_changes_after_train_step() -> None:
+    """Verify that one training step actually updates the model weights."""
+    model = ChurnMLP(input_dim=10)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    criterion = torch.nn.BCEWithLogitsLoss()  # matches production training
+
+    x = torch.randn(4, 10)
+    y = torch.tensor([0.0, 1.0, 1.0, 0.0])
+
+    # Get output before training (raw logits)
+    model.eval()
+    with torch.no_grad():
+        before = model(x).clone()
+
+    # One training step
+    model.train()
+    optimizer.zero_grad()
+    loss = criterion(model(x), y)  # logits -> BCEWithLogitsLoss
+    loss.backward()
+    optimizer.step()
+
+    # Get output after training
+    model.eval()
+    with torch.no_grad():
+        after = model(x)
+
+    assert not torch.allclose(before, after), \
+        "Model output should change after a training step"
+
+
+def test_mlp_end_to_end_with_preprocessor() -> None:
+    """End-to-end test: raw DataFrame → preprocessor → MLP → prediction.
+
+    This is the ROBUST test — it uses the actual preprocessor to determine
+    input_dim dynamically, so it never breaks if the dataset changes.
+    """
+    import pickle, os
+    preprocessor_path = "models/preprocessor.pkl"
+    if not os.path.exists(preprocessor_path):
+        pytest.skip("Preprocessor not fitted yet — run training first")
+
+    preprocessor = pickle.load(open(preprocessor_path, "rb"))
+    sample = pd.DataFrame([{
+        "tenure": 12, "MonthlyCharges": 70.0, "TotalCharges": 840.0,
+        "Contract": "Month-to-month", "InternetService": "Fiber optic",
+        "TechSupport": "No", "OnlineSecurity": "No", "gender": "Male",
+        "SeniorCitizen": 0, "Partner": "No", "Dependents": "No",
+        "PhoneService": "Yes", "MultipleLines": "No", "OnlineBackup": "No",
+        "DeviceProtection": "No", "StreamingTV": "No", "StreamingMovies": "No",
+        "PaperlessBilling": "Yes", "PaymentMethod": "Electronic check",
+    }])
+    X_processed = preprocessor.transform(sample)
+    input_dim = X_processed.shape[1]
+
+    model = ChurnMLP(input_dim=input_dim)
+    model.eval()
+    with torch.no_grad():
+        logits = model(torch.FloatTensor(X_processed))
+        proba = torch.sigmoid(logits)
+
+    assert proba.shape == (1,)
+    assert 0 <= proba.item() <= 1, "Probability must be in [0, 1]"
 
 
 def test_forward_output_shape(model: ChurnMLP, x_tensor: torch.Tensor) -> None:
