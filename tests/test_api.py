@@ -11,7 +11,11 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def client() -> Generator[TestClient, None, None]:
-    """Create a test client for the API."""
+    """Create a test client for the API.
+
+    Note: This requires the model and preprocessor files to exist.
+    Run training first (Stage 2) before running API tests.
+    """
     from src.api.main import app
 
     with TestClient(app) as c:
@@ -59,6 +63,88 @@ def test_health_response_body(client: TestClient) -> None:
     body = client.get("/health").json()
     assert body["status"] == "healthy"
     assert body["model"] is not None
+
+
+# ---------------------------------------------------------------------------
+# /predict endpoint
+# ---------------------------------------------------------------------------
+
+
+def test_predict_valid_payload_returns_200(
+    client: TestClient, sample_customer: dict[str, Any]
+) -> None:
+    """POST /predict with a complete valid payload should return HTTP 200."""
+    assert client.post("/predict", json=sample_customer).status_code == 200
+
+
+def test_predict_response_structure(
+    client: TestClient, sample_customer: dict[str, Any]
+) -> None:
+    """POST /predict response must contain churn_probability, churn_prediction, threshold."""
+    body = client.post("/predict", json=sample_customer).json()
+    assert "churn_probability" in body
+    assert "churn_prediction" in body
+    assert "threshold" in body
+
+
+def test_predict_probability_in_unit_interval(
+    client: TestClient, sample_customer: dict[str, Any]
+) -> None:
+    """churn_probability must be a value in [0, 1]."""
+    body = client.post("/predict", json=sample_customer).json()
+    assert 0.0 <= body["churn_probability"] <= 1.0
+
+
+def test_predict_threshold_matches_app_constant(
+    client: TestClient, sample_customer: dict[str, Any]
+) -> None:
+    """Returned threshold must match the THRESHOLD constant defined in main.py."""
+    from src.api.main import THRESHOLD
+
+    body = client.post("/predict", json=sample_customer).json()
+    assert body["threshold"] == pytest.approx(THRESHOLD)
+
+
+def test_predict_churn_prediction_consistent_with_probability(
+    client: TestClient,
+    sample_customer: dict[str, Any],
+) -> None:
+    """churn_prediction must equal churn_probability >= threshold."""
+    body = client.post("/predict", json=sample_customer).json()
+    expected = body["churn_probability"] >= body["threshold"]
+    assert body["churn_prediction"] == expected
+
+
+def test_predict_blank_total_charges_is_accepted(
+    client: TestClient, sample_customer: dict[str, Any]
+) -> None:
+    """A blank TotalCharges string should be accepted and imputed by the pipeline."""
+    payload = {**sample_customer, "TotalCharges": ""}
+    assert client.post("/predict", json=payload).status_code == 200
+
+
+def test_predict_null_total_charges_is_accepted(
+    client: TestClient, sample_customer: dict[str, Any]
+) -> None:
+    """A null TotalCharges should be accepted and imputed by the pipeline."""
+    payload = {**sample_customer, "TotalCharges": None}
+    assert client.post("/predict", json=payload).status_code == 200
+
+
+def test_predict_missing_field_returns_422(
+    client: TestClient, sample_customer: dict[str, Any]
+) -> None:
+    """Omitting a required field should return HTTP 422 Unprocessable Entity."""
+    payload = {k: v for k, v in sample_customer.items() if k != "tenure"}
+    assert client.post("/predict", json=payload).status_code == 422
+
+
+def test_predict_invalid_enum_returns_422(
+    client: TestClient, sample_customer: dict[str, Any]
+) -> None:
+    """An invalid categorical value should return HTTP 422 Unprocessable Entity."""
+    payload = {**sample_customer, "Contract": "Weekly"}
+    assert client.post("/predict", json=payload).status_code == 422
 
 
 # ---------------------------------------------------------------------------
