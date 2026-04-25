@@ -13,6 +13,8 @@ from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
 from src.api.metrics import (
+    PREDICTION_CLASS,
+    PREDICTION_VALUE,
     REQUEST_COUNT,
     REQUEST_LATENCY,
     metrics_endpoint,
@@ -126,13 +128,25 @@ def metrics() -> Response:
 @app.post("/predict", response_model=PredictionOutput)
 def predict(request: Request, customer: CustomerInput) -> PredictionOutput:
     """Predict churn probability for a single customer."""
+    # 1. Convert Pydantic model to DataFrame
     input_df = pd.DataFrame([customer.model_dump()])
+
+    # 2. Run through preprocessing pipeline
     X_processed = request.app.state.preprocessor.transform(input_df)
+
+    # 3. Run through MLP model
     X_tensor = torch.FloatTensor(X_processed)
     with torch.no_grad():
         probability = torch.sigmoid(request.app.state.model(X_tensor)).item()
+    churn = probability >= THRESHOLD
+
+    # 4. Record metrics for monitoring
+    PREDICTION_VALUE.observe(probability)
+    PREDICTION_CLASS.labels(prediction="churn" if churn else "no_churn").inc()
+
+    # 5. Return probability and binary prediction
     return PredictionOutput(
         churn_probability=round(probability, 4),
-        churn_prediction=probability >= THRESHOLD,
+        churn_prediction=churn,
         threshold=THRESHOLD,
     )
