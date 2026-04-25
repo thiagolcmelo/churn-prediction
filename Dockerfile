@@ -8,7 +8,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 
 # Install dependencies first (cached layer — only rebuilds when pyproject.toml changes)
 COPY pyproject.toml .
-RUN pip install --no-cache-dir .
+# This is costly because of Torch
+# RUN pip install --no-cache-dir .
+RUN --mount=type=cache,target=/root/.cache/pip pip install .
 
 # Copy application code
 COPY src/ src/
