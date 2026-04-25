@@ -40,7 +40,7 @@ target-version = "py311"
 exclude = ["*.ipynb"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP"]  # pycodestyle, pyflakes, isort, pyupgrade
+select = ["E", "F", "W", "I", "UP"]  # pycodestyle, pyflakes, isort, pyupgrade
 ignore = ["E501"]   # formatter handles line length
 
 [tool.ruff.format]

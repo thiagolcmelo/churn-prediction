@@ -1,4 +1,4 @@
-.PHONY: install lint fix format test clean
+.PHONY: install lint fix format test clean run
 
 # Install the package and dev dependencies in editable mode
 install:
@@ -24,3 +24,6 @@ test:
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
+
+run:
+	uvicorn src.api.main:app --reload --port 8000
