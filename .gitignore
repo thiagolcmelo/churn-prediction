@@ -16,6 +16,10 @@ data/raw/
 models/*.pt
 models/*.joblib
 
+# Allow MLP model to be versioned. It is small enough and facilitates
+# distribution.
+!models/mlp_churn.pt
+
 # MLflow tracking directory — experiment logs, can be large
 mlruns/
 
