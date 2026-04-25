@@ -1,0 +1,64 @@
+$ python scripts/simulate_traffic.py
+============================================================
+Churn API Traffic Simulator
+============================================================
+Target:     http://localhost:8000
+Duration:   600s (10.0 min)
+Base RPS:   3.0
+Error rate: 5%
+============================================================
+API health: {'status': 'healthy', 'model': 'mlp_v1', 'run_id': '92cb046039b940aeaddb5d5c25e29b52'}
+
+Started at 13:52:59
+────────────────────────────────────────────────────────────
+  [  8.0%] Sent:    50 | Errors:   4 | Avg latency:    8.7ms | RPS: 1.5 | Churn rate: 34.8%
+  [ 12.7%] Sent:   100 | Errors:   7 | Avg latency:    9.1ms | RPS: 2.1 | Churn rate: 35.5%
+  [ 16.5%] Sent:   150 | Errors:  12 | Avg latency:    8.6ms | RPS: 2.6 | Churn rate: 36.2%
+  [ 19.7%] Sent:   200 | Errors:  18 | Avg latency:    9.1ms | RPS: 3.0 | Churn rate: 31.9%
+  [ 22.6%] Sent:   250 | Errors:  20 | Avg latency:    9.1ms | RPS: 3.0 | Churn rate: 34.8%
+  [ 25.5%] Sent:   300 | Errors:  23 | Avg latency:    9.0ms | RPS: 3.0 | Churn rate: 32.5%
+  [ 28.3%] Sent:   350 | Errors:  24 | Avg latency:    9.4ms | RPS: 3.0 | Churn rate: 34.4%
+  [ 31.3%] Sent:   400 | Errors:  26 | Avg latency:    9.0ms | RPS: 3.0 | Churn rate: 34.2%
+  [ 34.2%] Sent:   450 | Errors:  29 | Avg latency:    9.4ms | RPS: 3.0 | Churn rate: 34.7%
+  [ 36.9%] Sent:   500 | Errors:  33 | Avg latency:    9.1ms | RPS: 3.0 | Churn rate: 36.2%
+  [ 39.8%] Sent:   550 | Errors:  37 | Avg latency:    9.1ms | RPS: 3.0 | Churn rate: 36.5%
+  [ 42.6%] Sent:   600 | Errors:  40 | Avg latency:    9.3ms | RPS: 3.0 | Churn rate: 36.4%
+  [ 45.5%] Sent:   650 | Errors:  42 | Avg latency:    9.4ms | RPS: 3.0 | Churn rate: 36.3%
+  [ 48.2%] Sent:   700 | Errors:  43 | Avg latency:    9.5ms | RPS: 3.0 | Churn rate: 36.2%
+  [ 50.4%] Sent:   750 | Errors:  45 | Avg latency:    9.2ms | RPS: 9.0 | Churn rate: 36.6%
+  [ 51.4%] Sent:   800 | Errors:  47 | Avg latency:    9.4ms | RPS: 9.0 | Churn rate: 36.5%
+  [ 52.4%] Sent:   850 | Errors:  49 | Avg latency:    9.2ms | RPS: 9.0 | Churn rate: 36.7%
+  [ 53.5%] Sent:   900 | Errors:  51 | Avg latency:    9.2ms | RPS: 9.0 | Churn rate: 36.9%
+  [ 54.4%] Sent:   950 | Errors:  55 | Avg latency:    9.0ms | RPS: 9.0 | Churn rate: 37.9%
+  [ 55.5%] Sent:  1000 | Errors:  58 | Avg latency:    9.4ms | RPS: 9.0 | Churn rate: 37.7%
+  [ 56.5%] Sent:  1050 | Errors:  61 | Avg latency:    8.8ms | RPS: 9.0 | Churn rate: 37.9%
+  [ 57.5%] Sent:  1100 | Errors:  63 | Avg latency:    8.7ms | RPS: 9.0 | Churn rate: 37.8%
+  [ 58.6%] Sent:  1150 | Errors:  63 | Avg latency:    9.1ms | RPS: 9.0 | Churn rate: 37.7%
+  [ 59.6%] Sent:  1200 | Errors:  69 | Avg latency:    8.3ms | RPS: 9.0 | Churn rate: 37.7%
+  [ 60.5%] Sent:  1250 | Errors:  73 | Avg latency:    9.0ms | RPS: 9.0 | Churn rate: 37.3%
+  [ 61.6%] Sent:  1300 | Errors:  75 | Avg latency:    8.8ms | RPS: 9.0 | Churn rate: 37.7%
+  [ 62.5%] Sent:  1350 | Errors:  77 | Avg latency:    8.4ms | RPS: 9.0 | Churn rate: 37.8%
+  [ 63.5%] Sent:  1400 | Errors:  80 | Avg latency:    8.2ms | RPS: 9.0 | Churn rate: 38.0%
+  [ 64.6%] Sent:  1450 | Errors:  83 | Avg latency:    8.5ms | RPS: 9.0 | Churn rate: 38.2%
+  [ 66.5%] Sent:  1500 | Errors:  87 | Avg latency:    8.1ms | RPS: 3.0 | Churn rate: 38.4%
+  [ 69.3%] Sent:  1550 | Errors:  90 | Avg latency:    8.3ms | RPS: 3.0 | Churn rate: 38.8%
+  [ 72.2%] Sent:  1600 | Errors:  93 | Avg latency:    8.1ms | RPS: 3.0 | Churn rate: 38.5%
+  [ 75.3%] Sent:  1650 | Errors:  96 | Avg latency:    8.2ms | RPS: 3.0 | Churn rate: 38.6%
+  [ 78.1%] Sent:  1700 | Errors:  99 | Avg latency:    8.8ms | RPS: 3.0 | Churn rate: 38.5%
+  [ 81.0%] Sent:  1750 | Errors: 101 | Avg latency:    8.9ms | RPS: 3.3 | Churn rate: 38.8%
+  [ 83.7%] Sent:  1800 | Errors: 106 | Avg latency:    8.5ms | RPS: 3.0 | Churn rate: 38.8%
+  [ 86.6%] Sent:  1850 | Errors: 110 | Avg latency:    8.5ms | RPS: 2.5 | Churn rate: 38.9%
+  [ 90.5%] Sent:  1900 | Errors: 112 | Avg latency:    9.1ms | RPS: 1.9 | Churn rate: 38.8%
+  [ 95.9%] Sent:  1950 | Errors: 113 | Avg latency:    9.1ms | RPS: 1.1 | Churn rate: 38.5%
+
+============================================================
+Simulation Complete
+============================================================
+Duration:       602s (10.0 min)
+Total requests: 1968
+Errors:         114 (5.8%)
+Churn preds:    712 (38.4%)
+Latency p50:    9.0ms
+Latency p95:    11.0ms
+Latency p99:    13.1ms
+============================================================
