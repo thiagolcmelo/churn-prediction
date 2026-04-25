@@ -2,6 +2,14 @@
 
 End-to-end machine learning project that predicts customer churn for a telecommunications company using a PyTorch MLP neural network.
 
+## Documents
+
+1. [ML Canvas](docs/ml_canvas.md)
+2. [Exploratory Data Analysis (EDA)](notebooks/01_eda.ipynb)
+3. [Model Card](docs/model_card.md)
+4. [Deployment Architecture](docs/deployment_architecture.md)
+5. [Monitoring Plan](docs/monitoring_plan.md)
+
 ## Quick Start
 
 1. Clone and set up environment
