@@ -64,6 +64,7 @@ def test_health_response_body(client: TestClient) -> None:
     body = client.get("/health").json()
     assert body["status"] == "healthy"
     assert body["model"] is not None
+    assert body["run_id"] is not None
 
 
 # ---------------------------------------------------------------------------

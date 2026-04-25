@@ -1,5 +1,6 @@
 """FastAPI application for churn prediction inference."""
 
+import json
 import pickle
 import time
 from collections.abc import AsyncGenerator
@@ -64,6 +65,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     model.eval()
     app.state.model = model
 
+    with open("models/mlp_churn_meta.json") as f:
+        app.state.model_meta = json.load(f)
+
     logger.info(f"Model loaded: input_dim={input_dim}, threshold={THRESHOLD}")
     yield
 
@@ -84,7 +88,8 @@ async def log_latency(request: Request, call_next: RequestResponseEndpoint) -> R
 @app.get("/health")
 def health() -> dict[str, str]:
     """Health check endpoint — verify the API is running."""
-    return {"status": "healthy", "model": "mlp_model"}
+    meta = app.state.model_meta
+    return {"status": "healthy", "model": meta["name"], "run_id": meta["run_id"]}
 
 
 @app.post("/predict", response_model=PredictionOutput)

@@ -1,3 +1,4 @@
+import json
 import pickle
 import platform
 import subprocess
@@ -263,7 +264,7 @@ def main() -> None:
             )
 
         # --- 4. MLP (PyTorch) ---
-        with mlflow.start_run(run_name="mlp_v1", nested=True):
+        with mlflow.start_run(run_name="mlp_v1", nested=True) as mlp_run:
             mlflow.log_params(data_fp)
 
             X_tr, X_val, y_tr, y_val = train_test_split(
@@ -316,6 +317,8 @@ def main() -> None:
             log_auc_curve(y_test, y_proba_mlp, "mlp")
 
             torch.save(mlp.state_dict(), "models/mlp_churn.pt")
+            with open("models/mlp_churn_meta.json", "w") as f:
+                json.dump({"name": "mlp_v1", "run_id": mlp_run.info.run_id}, f)
             mlflow.pytorch.log_model(
                 mlp,
                 "model",
