@@ -12,6 +12,11 @@ from fastapi import FastAPI, Request
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
+from src.api.metrics import (
+    REQUEST_COUNT,
+    REQUEST_LATENCY,
+    metrics_endpoint,
+)
 from src.api.schemas import CustomerInput, PredictionOutput
 from src.models.mlp import ChurnMLP
 from src.utils import get_logger
@@ -76,12 +81,32 @@ app = FastAPI(title="Churn Prediction API", version="1.0.0", lifespan=lifespan)
 
 
 @app.middleware("http")
-async def log_latency(request: Request, call_next: RequestResponseEndpoint) -> Response:
-    """Log request latency for every endpoint."""
+async def track_metrics(
+    request: Request, call_next: RequestResponseEndpoint
+) -> Response:
+    """Middleware that records request count and latency for every request."""
     start = time.time()
     response = await call_next(request)
-    duration_ms = (time.time() - start) * 1000
-    logger.info(f"{request.method} {request.url.path} — {duration_ms:.1f}ms")
+    duration = time.time() - start
+
+    route = request.scope.get("route")
+    endpoint_label = route.path if route else "unmatched_route"
+
+    # Skip metrics endpoint itself to avoid recursion
+    if endpoint_label != "/metrics":
+        REQUEST_COUNT.labels(
+            method=request.method,
+            endpoint=endpoint_label,
+            status_code=response.status_code,
+        ).inc()
+        REQUEST_LATENCY.labels(
+            method=request.method,
+            endpoint=endpoint_label,
+        ).observe(duration)
+        logger.info(
+            f"{request.method} {endpoint_label} — {duration * 1000:.1f}ms — {response.status_code}"
+        )
+
     return response
 
 
@@ -90,6 +115,12 @@ def health() -> dict[str, str]:
     """Health check endpoint — verify the API is running."""
     meta = app.state.model_meta
     return {"status": "healthy", "model": meta["name"], "run_id": meta["run_id"]}
+
+
+@app.get("/metrics")
+def metrics() -> Response:
+    """Prometheus metrics endpoint — scraped by Prometheus every 5 seconds."""
+    return metrics_endpoint()
 
 
 @app.post("/predict", response_model=PredictionOutput)
