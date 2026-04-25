@@ -1,5 +1,6 @@
 """Data validation tests using pandera."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -16,64 +17,54 @@ from src.data.preprocessing import (
     prepare_dataset,
 )
 
+# A complete valid row covering every column in PREPARED_SCHEMA.
+# Schema tests override individual fields rather than repeating all columns.
+_VALID_ROW: dict[str, Any] = {
+    "tenure": 12,
+    "MonthlyCharges": 50.0,
+    "TotalCharges": 600.0,
+    "SeniorCitizen": 0,
+    "gender": "Male",
+    "Partner": "Yes",
+    "Dependents": "No",
+    "PhoneService": "Yes",
+    "MultipleLines": "No",
+    "InternetService": "DSL",
+    "OnlineSecurity": "No",
+    "OnlineBackup": "No",
+    "DeviceProtection": "No",
+    "TechSupport": "No",
+    "StreamingTV": "No",
+    "StreamingMovies": "No",
+    "Contract": "Month-to-month",
+    "PaperlessBilling": "Yes",
+    "PaymentMethod": "Electronic check",
+}
+
 
 def test_valid_data_passes_schema() -> None:
     """Known-good data should pass validation."""
-    df = pd.DataFrame(
-        {
-            "tenure": [12, 36],
-            "MonthlyCharges": [50.0, 70.0],
-            "TotalCharges": [600.0, 2520.0],
-            "gender": ["Male", "Female"],
-            "SeniorCitizen": [0, 1],
-            "Partner": ["Yes", "No"],
-            "Dependents": ["No", "No"],
-            "PhoneService": ["Yes", "Yes"],
-            "InternetService": ["DSL", "Fiber optic"],
-            "Contract": ["Month-to-month", "Two year"],
-        }
-    )
-    PREPARED_SCHEMA.validate(df)  # Should not raise
+    PREPARED_SCHEMA.validate(pd.DataFrame([_VALID_ROW]))  # Should not raise
+
+
+def test_nullable_total_charges_passes_schema() -> None:
+    """NaN TotalCharges must pass — imputation happens inside the pipeline."""
+    row = {**_VALID_ROW, "TotalCharges": float("nan")}
+    PREPARED_SCHEMA.validate(pd.DataFrame([row]))  # Should not raise
 
 
 def test_negative_tenure_fails() -> None:
     """Negative tenure should fail validation."""
-    df = pd.DataFrame(
-        {
-            "tenure": [-5],
-            "MonthlyCharges": [50.0],
-            "TotalCharges": [600.0],
-            "gender": ["Male"],
-            "SeniorCitizen": [0],
-            "Partner": ["Yes"],
-            "Dependents": ["No"],
-            "PhoneService": ["Yes"],
-            "InternetService": ["DSL"],
-            "Contract": ["Month-to-month"],
-        }
-    )
+    row = {**_VALID_ROW, "tenure": -5}
     with pytest.raises(pa.errors.SchemaError):
-        PREPARED_SCHEMA.validate(df)
+        PREPARED_SCHEMA.validate(pd.DataFrame([row]))
 
 
 def test_invalid_contract_fails() -> None:
     """Unknown contract type should fail validation."""
-    df = pd.DataFrame(
-        {
-            "tenure": [12],
-            "MonthlyCharges": [50.0],
-            "TotalCharges": [600.0],
-            "gender": ["Male"],
-            "SeniorCitizen": [0],
-            "Partner": ["Yes"],
-            "Dependents": ["No"],
-            "PhoneService": ["Yes"],
-            "InternetService": ["DSL"],
-            "Contract": ["Weekly"],  # Invalid!
-        }
-    )
+    row = {**_VALID_ROW, "Contract": "Weekly"}
     with pytest.raises(pa.errors.SchemaError):
-        PREPARED_SCHEMA.validate(df)
+        PREPARED_SCHEMA.validate(pd.DataFrame([row]))
 
 
 def test_prepare_dataset(sample_data: pd.DataFrame) -> None:

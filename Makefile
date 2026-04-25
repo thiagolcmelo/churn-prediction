@@ -1,4 +1,4 @@
-.PHONY: install lint fix format test clean run
+.PHONY: install lint fix format test clean run train
 
 # Install the package and dev dependencies in editable mode
 install:
@@ -27,3 +27,9 @@ clean:
 
 run:
 	uvicorn src.api.main:app --reload --port 8000
+
+# Train MLP and baseline models.
+# Requires the following to be running in another terminal:
+#   mlflow ui --port 5001
+train:
+	python -m src.models.mlp_baselines

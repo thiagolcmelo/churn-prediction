@@ -67,17 +67,53 @@ PREPARED_SCHEMA = DataFrameSchema(  # type: ignore[no-untyped-call]
     {
         "tenure": Column(int, Check.ge(0), nullable=False),
         "MonthlyCharges": Column(float, Check.ge(0), nullable=False),
-        "TotalCharges": Column(float, Check.ge(0), nullable=False),
-        "gender": Column(str, Check.isin(["Male", "Female"]), nullable=False),
+        # nullable=True: blank TotalCharges rows become NaN here intentionally;
+        # TotalChargesFixer imputes them inside the pipeline to avoid data leakage.
+        "TotalCharges": Column(float, Check.ge(0), nullable=True),
         "SeniorCitizen": Column(int, Check.isin([0, 1]), nullable=False),
+        "gender": Column(str, Check.isin(["Male", "Female"]), nullable=False),
         "Partner": Column(str, Check.isin(["Yes", "No"]), nullable=False),
         "Dependents": Column(str, Check.isin(["Yes", "No"]), nullable=False),
         "PhoneService": Column(str, Check.isin(["Yes", "No"]), nullable=False),
+        "MultipleLines": Column(
+            str, Check.isin(["Yes", "No", "No phone service"]), nullable=False
+        ),
         "InternetService": Column(
             str, Check.isin(["DSL", "Fiber optic", "No"]), nullable=False
         ),
+        "OnlineSecurity": Column(
+            str, Check.isin(["Yes", "No", "No internet service"]), nullable=False
+        ),
+        "OnlineBackup": Column(
+            str, Check.isin(["Yes", "No", "No internet service"]), nullable=False
+        ),
+        "DeviceProtection": Column(
+            str, Check.isin(["Yes", "No", "No internet service"]), nullable=False
+        ),
+        "TechSupport": Column(
+            str, Check.isin(["Yes", "No", "No internet service"]), nullable=False
+        ),
+        "StreamingTV": Column(
+            str, Check.isin(["Yes", "No", "No internet service"]), nullable=False
+        ),
+        "StreamingMovies": Column(
+            str, Check.isin(["Yes", "No", "No internet service"]), nullable=False
+        ),
         "Contract": Column(
             str, Check.isin(["Month-to-month", "One year", "Two year"]), nullable=False
+        ),
+        "PaperlessBilling": Column(str, Check.isin(["Yes", "No"]), nullable=False),
+        "PaymentMethod": Column(
+            str,
+            Check.isin(
+                [
+                    "Electronic check",
+                    "Mailed check",
+                    "Bank transfer (automatic)",
+                    "Credit card (automatic)",
+                ]
+            ),
+            nullable=False,
         ),
     }
 )

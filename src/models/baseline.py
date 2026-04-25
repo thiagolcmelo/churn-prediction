@@ -90,7 +90,7 @@ def main() -> None:
     mlflow.set_experiment(EXPERIMENT_NAME)
 
     # Log dataset version in every run (challenge requirement)
-    data_fp = get_data_fingerprint(X_train)
+    data_fp = get_data_fingerprint(X_train, X_test, y_train, y_test)
 
     # -- Baseline 1: DummyClassifier ------------------------------------
     with mlflow.start_run(run_name="dummy-most-frequent"):

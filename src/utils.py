@@ -32,23 +32,34 @@ def get_logger(name: str) -> logging.Logger:
     return logger
 
 
-def get_data_fingerprint(df: pd.DataFrame) -> dict[str, Any]:
-    """Compute a reproducible fingerprint of the dataset for MLflow tracking.
+def get_data_fingerprint(
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame,
+    y_train: pd.Series,
+    y_test: pd.Series,
+) -> dict[str, Any]:
+    """Compute a reproducible fingerprint of the full dataset for MLflow tracking.
 
-    The challenge requires logging 'dataset version' alongside parameters and metrics.
-    This function creates a hash of the data content so you can detect if the dataset
-    changed between experiments — essential for debugging model regressions.
+    Hashes features AND labels together so the fingerprint catches relabelling,
+    target-encoding changes, or different splits — not just feature drift.
 
     Returns:
-        Dict with data_version, data_hash, data_rows, and data_source.
+        Dict with data_version, data_hash, data_rows, data_train_rows,
+        data_test_rows, and data_source.
     """
-    data_hash = hashlib.md5(
-        pd.util.hash_pandas_object(df).values.tobytes()
-    ).hexdigest()[:8]
+    full_X = pd.concat([X_train, X_test], ignore_index=True)
+    full_y = pd.concat([y_train, y_test], ignore_index=True)
+    hash_bytes = (
+        pd.util.hash_pandas_object(full_X).values.tobytes()
+        + pd.util.hash_pandas_object(full_y).values.tobytes()
+    )
+    data_hash = hashlib.md5(hash_bytes).hexdigest()[:8]
     return {
         "data_version": "v1.0",
         "data_hash": data_hash,
-        "data_rows": len(df),
+        "data_rows": len(full_X),
+        "data_train_rows": len(X_train),
+        "data_test_rows": len(X_test),
         "data_source": "telco-customer-churn (IBM/Kaggle)",
     }
 

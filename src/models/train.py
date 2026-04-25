@@ -2,6 +2,7 @@
 
 from typing import TypeVar
 
+import mlflow
 import numpy as np
 import torch
 import torch.nn as nn
@@ -102,6 +103,16 @@ def train_mlp(
                 f"val_pr_auc: {val_pr_auc:.4f}"
             )
 
+        if mlflow.active_run() is not None:
+            mlflow.log_metrics(
+                {
+                    "train_loss": float(train_loss),
+                    "val_loss": float(val_loss),
+                    "val_pr_auc": float(val_pr_auc),
+                },
+                step=epoch,
+            )
+
         # --- Early stopping check ---
         if (val_pr_auc > best_val_pr_auc) and (val_loss < best_val_loss):
             best_val_pr_auc = val_pr_auc
@@ -114,7 +125,7 @@ def train_mlp(
                 logger.info(
                     f"Early stopping at epoch {epoch}. "
                     f"Best val_loss: {best_val_loss:.4f}. "
-                    f"Best best_val_loss: {best_val_loss:.4f}."
+                    f"Best val_pr_auc: {best_val_pr_auc:.4f}."
                 )
                 break
 
