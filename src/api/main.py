@@ -1,18 +1,18 @@
 """FastAPI application for churn prediction inference."""
 
-from contextlib import asynccontextmanager
 import pickle
 import time
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
-from api.schemas import CustomerInput, PredictionOutput
-from fastapi import FastAPI, Request
-from models.mlp import ChurnMLP
 import pandas as pd
+import torch
+from fastapi import FastAPI, Request
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
-import torch
 
+from src.api.schemas import CustomerInput, PredictionOutput
+from src.models.mlp import ChurnMLP
 from src.utils import get_logger
 
 logger = get_logger(__name__)

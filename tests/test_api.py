@@ -3,10 +3,11 @@
 from collections.abc import Generator
 from typing import Any
 
-from api.schemas import CustomerInput, PredictionOutput
-from pydantic import ValidationError
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
+
+from src.api.schemas import CustomerInput, PredictionOutput
 
 
 @pytest.fixture
