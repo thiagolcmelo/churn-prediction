@@ -14,17 +14,18 @@ services:
       - mlflow
 
   mlflow:
-    image: ghcr.io/mlflow/mlflow:v2.14.0
+    image: ghcr.io/mlflow/mlflow:v3.11.1
     ports:
       - "5001:5000"
     volumes:
-      - mlflow-data:/mlflow
+      - ./mlflow.db:/mlflow/mlflow.db
+      - ./mlruns:/mlflow/mlruns
     command: >
       mlflow server
       --host 0.0.0.0
       --port 5000
       --backend-store-uri sqlite:///mlflow/mlflow.db
-      --default-artifact-root /mlflow/artifacts
+      --default-artifact-root /mlflow/mlruns
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/"]  # MLflow has no /health — root UI returns 200
       interval: 10s
@@ -54,6 +55,3 @@ services:
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
-
-volumes:
-  mlflow-data:
